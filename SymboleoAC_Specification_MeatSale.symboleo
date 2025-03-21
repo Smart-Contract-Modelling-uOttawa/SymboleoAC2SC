@@ -1,0 +1,39 @@
+Domain meatSaleDomain 
+  // Controller by default is the role itself
+  Seller isA Role with returnAddress: String, name: String;
+  Buyer isA Role with name: String, warehouse: String; 
+  // thirdParty added to differentiate third party role from contracting parties
+  TransportCo isA Role thirdParty with name:String;
+  Assessor isA Role thirdParty with name: String;
+  Regulator isA Role thirdParty with name: String;
+  Storage isA Role thirdParty with name: String;
+  MeatQuality isAn Enumeration(PRIME, AAA, AA, A);
+  // Controller by default is the owner 
+  PerishableGood isAn Asset with quantity: Number, quality: MeatQuality, barcode:String, owner: Seller; 
+  Meat isA PerishableGood;
+  // For delivered event, the controller is its performer
+  Delivered isAn Event with deliveryAddress: String, delDueDate: Date, performer: TransportCo, controller: Seller;
+  InspectedQuality isAn Event with Env quantityFound: Number, Env qualityFound:MeatQuality, Env barFound: String,  performer:Assessor; 
+  TempLocTime isA DataTransfer with Env temp:Number, Env locLatitude:String, Env locLongitude:String, Env dataTime:String; // Other events exist but are skipped here.
+endDomain
+  // ... Omitted code describing the contract signature and local definitions
+Obligations
+  // Controller by default is the debtor (seller) of obligation delivery 
+  delivery: Obligation(seller, buyer, true, WhappensBefore(delivered, delivered.delDueDate) and Happens(temploctime) and temploctime.temp <= 18 and delivered.deliveryAddress == buyer.warehouse); 
+  // Controller by default is the debtor (assessor) of obligation delivery 
+  inspectMeat: Happens(delivered) -> Obligation(assessor, buyer, Happens(passwordNotification), Happens(inspectedQuality) and inspectedQuality.barFound == goods.barcode and inspectedQuality.qualityFound == goods.quality  and inspectedQuality.quantityFound == goods.quantity);
+    
+Powers
+   // Controller by default is the creditor of power terminateContract, i.e.,buyer
+    terminateContract: Happens(Violated(obligations.delivery)) -> P(buyer, seller, true, Terminated(self));  
+
+ACPolicy with Controller regulator // Controller of policy is the regulator who can override rules and pre-authorization rules
+ Rule1: Grant read To buyer On goods.quantity by seller; // Access to specific asset attribute
+ Rule2: Grant read To assessor On obligations.delivery by seller; // Access to obligation
+ Rule3: Grant read To transportCo On inspectedQuality by assessor;
+ Rule4: Grant read To seller On inspectedQuality by assessor;
+ Rule5: Grant read To buyer On temploctime.temp by regulator; 
+ Rule6: Grant write To assessor On inspectedQuality by regulator;
+ Rule7: Grant write To transportCo On powers.suspendDelivery by seller; 
+ Rule8: Grant write To transportCo On powers.resumeDelivery by seller;  
+endContract
