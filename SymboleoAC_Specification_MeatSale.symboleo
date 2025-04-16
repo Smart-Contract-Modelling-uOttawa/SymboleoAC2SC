@@ -1,39 +1,75 @@
 Domain meatSaleDomain 
-  // Controller by default is the role itself
+  //controller by default is the role itself
   Seller isA Role with returnAddress: String, name: String;
   Buyer isA Role with name: String, warehouse: String; 
-  // thirdParty added to differentiate third party role from contracting parties
+  //thirdParty is added to differentiate thirdParty role from contracting parties
   TransportCo isA Role thirdParty with name:String;
   Assessor isA Role thirdParty with name: String;
   Regulator isA Role thirdParty with name: String;
-  Storage isA Role thirdParty with name: String;
+  Currency isAn Enumeration(CAD, USD, EUR);
   MeatQuality isAn Enumeration(PRIME, AAA, AA, A);
-  // Controller by default is the owner 
+  //by default controller of an asset is its owner 
   PerishableGood isAn Asset with quantity: Number, quality: MeatQuality, barcode:String, owner: Seller; 
   Meat isA PerishableGood;
-  // For delivered event, the controller is its performer
-  Delivered isAn Event with deliveryAddress: String, delDueDate: Date, performer: TransportCo, controller: Seller;
+  //TransportCo assigns as the performer (instead of the default value) 
+  Delivered isAn Event with deliveryAddress: String, delDueDate: Date, performer: TransportCo, controller: Seller; 
+  Paid isAn Event with amount: Number, currency: Currency, from: Buyer, to: Seller, payDueDate: Date, performer: Buyer; 
+  PaidLate isAn Event with amount: Number, currency: Currency, from: Buyer, to: Seller, performer: Buyer; 
   InspectedQuality isAn Event with Env quantityFound: Number, Env qualityFound:MeatQuality, Env barFound: String,  performer:Assessor; 
-  TempLocTime isA DataTransfer with Env temp:Number, Env locLatitude:String, Env locLongitude:String, Env dataTime:String; // Other events exist but are skipped here.
-endDomain
-  // ... Omitted code describing the contract signature and local definitions
+  TempLoCTime isA DataTransfer with Env temp:Number, Env locLatitude: String, Env locLongitude: String, Env dataTime:String;
+  Container isA Resource with Env pin:String, Env loadResource: Meat, Env unLoadRresource: Boolean; 
+  PasswordNotification isAn Event with Env pin:String, performer:TransportCo;
+  UnLoaded isAn Event with performer:Assessor;
+endDomain 
+   
+Contract MeatSale (buyerP : Buyer, sellerP : Seller, transportCoP : TransportCo, assessorP : Assessor, regulatorP : Regulator, barcodeP : String, qnt : Number, qlt : MeatQuality, amt : Number, curr : Currency, payDueDate: Date, 
+	delAdd : String, effDate : Date, delDueDateDays : Number, interestRate: Number
+)
+ 
+Declarations
+  seller: Seller with name:= sellerP.name, returnAddress := sellerP.returnAddress;
+  buyer: Buyer with name:=buyerP.name, warehouse:= buyerP.warehouse;
+  transportCo: TransportCo with name:= transportCoP.name;
+  assessor: Assessor with name:= assessorP.name;
+  regulator: Regulator with name:= regulatorP.name;
+  goods: Meat with quantity := qnt, quality := qlt, barcode:=barcodeP, owner:= seller;
+  delivered: Delivered with deliveryAddress := delAdd, delDueDate := Date.add(effDate, delDueDateDays, days), performer:= transportCo, controller:= seller;//item := goods, 
+  paidLate: PaidLate with amount := (1 + interestRate / 100) * amt, currency := curr, from := buyer, to := seller, performer:= buyer;
+  paid: Paid with amount := amt, currency := curr, from := buyer, to := seller, payDueDate := payDueDate, performer:= buyer;// controller:=transportCo;
+  temploctime: TempLoCTime;
+  passwordNotification: PasswordNotification  with performer:=transportCo;
+  inspectedQuality:InspectedQuality with performer:=assessor; 
+  unLoaded:UnLoaded with performer:=assessor;
+  container:Container;
+ 
 Obligations
-  // Controller by default is the debtor (seller) of obligation delivery 
+  // controller by default is the debtor (seller) of obligation delivery //Happens(temploctime) and
   delivery: Obligation(seller, buyer, true, WhappensBefore(delivered, delivered.delDueDate) and Happens(temploctime) and temploctime.temp <= 18 and delivered.deliveryAddress == buyer.warehouse); 
-  // Controller by default is the debtor (assessor) of obligation delivery 
   inspectMeat: Happens(delivered) -> Obligation(assessor, buyer, Happens(passwordNotification), Happens(inspectedQuality) and inspectedQuality.barFound == goods.barcode and inspectedQuality.qualityFound == goods.quality  and inspectedQuality.quantityFound == goods.quantity);
-    
+  //unLoad: Happens(unLoaded) -> Obligation(assessor,seller, true,unLoaded.UnLoadRresource :=1);
+  payment: O(buyer, seller , Happens(unLoaded), WhappensBefore(paid, paid.payDueDate));  
+  latePayment: Happens(Violated(obligations.payment)) -> O(buyer, seller, true, Happens(paidLate));
+     
 Powers
-   // Controller by default is the creditor of power terminateContract, i.e.,buyer
-    terminateContract: Happens(Violated(obligations.delivery)) -> P(buyer, seller, true, Terminated(self));  
+  // controller by default is the creditor of power suspendDelivery i.e,seller
+  suspendDelivery : Happens(Violated(obligations.payment)) -> Power(seller, buyer, true, Suspended(obligations.delivery)) with Controller seller;
+  resumeDelivery: HappensWithin(paidLate, Suspension(obligations.delivery)) -> P(buyer, seller, true, Resumed(obligations.delivery));
+  terminateContract: Happens(Violated(obligations.delivery)) -> P(buyer, seller, true, Terminated(self));  
 
-ACPolicy with Controller regulator // Controller of policy is the regulator who can override rules and pre-authorization rules
- Rule1: Grant read To buyer On goods.quantity by seller; // Access to specific asset attribute
- Rule2: Grant read To assessor On obligations.delivery by seller; // Access to obligation
+//access policy that contain list of rules to Grant/Revoke permission   
+ACPolicy with Controller regulator //controller of policy are the regulator who can override rule and pre-authrization rule
+ Rule1: Grant read To buyer On goods.quantity by seller; //access to specific asset attribute
+ Rule2: Grant read To assessor  On obligations.delivery by seller; //access to obligation
  Rule3: Grant read To transportCo On inspectedQuality by assessor;
  Rule4: Grant read To seller On inspectedQuality by assessor;
  Rule5: Grant read To buyer On temploctime.temp by regulator; 
  Rule6: Grant write To assessor On inspectedQuality by regulator;
- Rule7: Grant write To transportCo On powers.suspendDelivery by seller; 
- Rule8: Grant write To transportCo On powers.resumeDelivery by seller;  
+ Rule7: Grant write To transportCo On  powers.suspendDelivery by seller; 
+ Rule8: Grant write To transportCo On  powers.resumeDelivery by seller;  
+ 
+
+
+Constraints
+  not(IsEqual(buyer, seller));
+
 endContract
