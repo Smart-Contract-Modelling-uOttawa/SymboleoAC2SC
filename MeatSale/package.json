@@ -16,9 +16,10 @@
   "engineStrict": true,
   "author": "Symboleo2SC",
   "dependencies": {
-    "fabric-contract-api": "^2.2.2",
-    "fabric-shim": "^2.2.2",
-    "symboleo-js-core": "^1.0.12"
+    "fabric-contract-api": "2.2.0",
+    "fabric-shim": "2.2.0",
+    "flatted": "^3.3.3",
+    "symboleoac-js-core": "^1.0.10"
   },
   "devDependencies": {
     "chai": "^4.1.2",
