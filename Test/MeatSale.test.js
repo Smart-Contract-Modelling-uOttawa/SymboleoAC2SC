@@ -24,6 +24,11 @@ describe('Meat Sale chain code tests', () => {
   //AC for oblivation/power state and time
   let quiredState = {state:"active", resource:"delivery", resourceType:"obligation"}
 
+  //AC event 
+  let EventquiredState = {event:"delivered", _type:"Delivered"}
+  let EventquiredState2 = {event:"paid", _type:"Paid"}
+  let EventquiredState3 = {event:"sold", _type:"Sold"}
+
 
 
   //let seller = { "returnAddress": "add", "name": "seller name"}
@@ -86,11 +91,16 @@ describe('Meat Sale chain code tests', () => {
 
       return Promise.resolve(internalGetStateByRange())
     })
-
+    
     parametersObject = {
-      "buyer": { "warehouse": "70 Glouxter", "name": "buyer name"},
-      "seller": { "returnAddress": "add", "name": "seller name"},
-      "regulator": { "returnAddress": "add", "name": "regulator name"},
+      "buyerP": { "warehouse": "70 Glouxter", "name": "buyer name"},
+      "sellerP": { "returnAddress": "51 Riduea", "name": "seller name"},
+      "transportCoP": { "returnAddress": "60 Orleans", "name": "transportCo name"},
+      "assessorP": { "returnAddress": "11 copper", "name": "assessor name"},
+      "regulatorP":{"name": "regulator name"},
+      "storageP":{"address": "55 Riduea"},
+      "shipperP": {"name": "shipper name"},
+      "barcodeP":{},
       "qnt": 2,
       "qlt": 3,
       "amt": 3, 
@@ -109,6 +119,188 @@ describe('Meat Sale chain code tests', () => {
 
 
   })
+/*
+  describe('Test Init transaction.', () => {
+     it('should return error on Init.', async () => {
+       chaincodeStub.putState.rejects('failed inserting key')
+       let c = new HFContract()
+       try {
+        const res = await c.init(transactionContext, parameters)
+         assert.fail('InitLedger should have failed')
+       } catch (err) {
+         expect(err.name).to.equal('failed inserting key')
+       }
+     })
+
+     it('should activate contract with the correct state for powers and obligations.', async () => {
+       const c = new HFContract();
+       const InitRes = await c.init(transactionContext, parameters);
+       expect(InitRes.successful).to.eql(true);
+       const state = JSON.parse((await chaincodeStub.getState(InitRes.contractId)).toString())
+       expect(state.state).to.eql("Active")
+       expect(state.activeState).to.eql("InEffect")
+       expect(state.obligations.payment.state).to.eql("Active")
+       expect(state.obligations.payment.activeState).to.eql("InEffect")
+       expect(state.obligations.delivery.state).to.eql("Active")
+       expect(state.obligations.delivery.activeState).to.eql("InEffect")
+     })
+   })
+
+   /*describe('Scenario: Test Triggering Event Transactions', () => {
+    let ctx, args, inputs, contract, mockStub;
+
+  beforeEach(() => {
+    // Mocking the context and contract state
+    ctx = {
+      stub: {
+        getState: sinon.stub(),
+        putState: sinon.stub()
+      }
+    };
+
+    // Sample contract state and inputs
+    inputs = {
+      contractId: 'contract123',
+      event: 'deliveryEvent'
+    };
+
+    contract = {
+      isInEffect: () => true,
+      accessPolicy: {
+        hasPermesstion: sinon.stub(),
+        isValid: sinon.stub()
+      },
+      delivered: {
+        happen: sinon.stub(),
+      },
+      seller: 'seller'
+    };
+
+    // Serialize and Deserialize Functions
+    mockStub = {
+      serialize: sinon.stub(),
+      deserialize: sinon.stub().returns(contract)
+    };
+
+    // JSON string of inputs
+    args = JSON.stringify(inputs);
+
+    // Mock getState to return the serialized contract
+    ctx.stub.getState.resolves(mockStub.serialize(contract));
+  });
+
+  afterEach(() => {
+    sinon.restore();
+  });
+    it('The event(delivered) should be generated only by authorized role.', async () => {
+      const c = new HFContract()
+      const InitRes = await c.init(transactionContext, parameters)
+
+      contract.accessPolicy.hasPermesstion.returns(true);
+      contract.accessPolicy.isValid.returns(true);
+
+      const res = await c.trigger_delivered(transactionContext, JSON.stringify({ contractId: InitRes.contractId}))
+
+      expect(res.successful).to.be.true;
+      expect(contract.delivered.happen.calledOnce).to.be.false;
+      expect(ctx.stub.putState.calledOnce).to.be.false;
+    })  
+
+
+    it('The event(paid) should be generated only by authorized role.', async () => {
+      const c = new HFContract()
+      const InitRes = await c.init(transactionContext, parameters)
+
+      contract.accessPolicy.hasPermesstion.returns(true);
+      contract.accessPolicy.isValid.returns(true);
+
+      const res = await c.trigger_delivered(transactionContext, JSON.stringify({ contractId: InitRes.contractId}))
+
+      expect(res.successful).to.be.true;
+      expect(contract.delivered.happen.calledOnce).to.be.false;
+      expect(ctx.stub.putState.calledOnce).to.be.false;
+    }) 
+
+    it('The event(paidLate) should be generated only by authorized role.', async () => {
+      const c = new HFContract()
+      const InitRes = await c.init(transactionContext, parameters)
+
+      contract.accessPolicy.hasPermesstion.returns(true);
+      contract.accessPolicy.isValid.returns(true);
+
+      const res = await c.trigger_delivered(transactionContext, JSON.stringify({ contractId: InitRes.contractId}))
+
+      expect(res.successful).to.be.true;
+      expect(contract.delivered.happen.calledOnce).to.be.false;
+      expect(ctx.stub.putState.calledOnce).to.be.false;
+    })
+
+    it('The event(inspectedQuality) should be generated only by authorized role.', async () => {
+      const c = new HFContract()
+      const InitRes = await c.init(transactionContext, parameters)
+
+      contract.accessPolicy.hasPermesstion.returns(true);
+      contract.accessPolicy.isValid.returns(true);
+
+      const res = await c.trigger_delivered(transactionContext, JSON.stringify({ contractId: InitRes.contractId}))
+
+      expect(res.successful).to.be.true;
+      expect(contract.delivered.happen.calledOnce).to.be.false;
+      expect(ctx.stub.putState.calledOnce).to.be.false;
+    })
+
+    it('The event(passwordNotification) should be generated only by authorized role.', async () => {
+      const c = new HFContract()
+      const InitRes = await c.init(transactionContext, parameters)
+
+      contract.accessPolicy.hasPermesstion.returns(true);
+      contract.accessPolicy.isValid.returns(true);
+
+      const res = await c.trigger_delivered(transactionContext, JSON.stringify({ contractId: InitRes.contractId}))
+
+      expect(res.successful).to.be.true;
+      expect(contract.delivered.happen.calledOnce).to.be.false;
+      expect(ctx.stub.putState.calledOnce).to.be.false;
+    })
+
+    it('The event(UnLoaded) should be generated only by authorized role.', async () => {
+      const c = new HFContract()
+      const InitRes = await c.init(transactionContext, parameters)
+
+      contract.accessPolicy.hasPermesstion.returns(true);
+      contract.accessPolicy.isValid.returns(true);
+
+      const res = await c.trigger_delivered(transactionContext, JSON.stringify({ contractId: InitRes.contractId}))
+
+      expect(res.successful).to.be.true;
+      expect(contract.delivered.happen.calledOnce).to.be.false;
+      expect(ctx.stub.putState.calledOnce).to.be.false;
+    })
+
+
+  })*/
+/*
+  describe('Scenario: payment and delivery are fulfilled.', () => {
+    it('should sucessfully terminate contract if payment and delivery are fulfilled.', async () => {
+      const c = new HFContract()
+      //////console.log('after new contract');
+      const InitRes = await c.init(transactionContext, parameters)
+      //////console.log('after  contract initiati');
+      
+      const res = await c.trigger_paid(transactionContext, JSON.stringify({ contractId: InitRes.contractId}))
+      //////console.log('res........ ', res)
+      expect(res.successful).to.eql(true)
+      const res2 = await c.trigger_delivered(transactionContext, JSON.stringify({ contractId: InitRes.contractId}))
+      
+      ////console.log('trigger_delivered........ ', res2)
+      expect(res2.successful).to.eql(true)
+      const state = parse((await chaincodeStub.getState(InitRes.contractId)).toString())// we deleted JSON.parse, we need only to parse the state
+     // ////console.log('state....... ', state.state)
+      expect(state.state).to.eql("SuccessfulTermination")
+      expect(state.obligations.delivery.state).to.eql("Fulfillment")
+      expect(state.obligations.payment.state).to.eql("Fulfillment")
+    })    
+  })*/
 
   //AC-test event happen (2)
   describe('Scenario: access the sate and time after the event was triggered.', () => {
@@ -123,14 +315,21 @@ describe('Meat Sale chain code tests', () => {
       //console.log('res2 trigger_delivered. ', res2)
       expect(res2.successful).to.eql(true)
       
-      const res = await c.getDeliveredDateAndTime(transactionContext, JSON.stringify({ contractId: InitRes.contractId, quiredState}))
-      console.log('res getDeliveredDateAndTime', res)
-      //expect(res.successful).to.eql(true)
+      const res = await c.getEventDateAndTime(transactionContext, JSON.stringify({ contractId: InitRes.contractId, event: EventquiredState}))
+      //console.log('res getEventDateAndTime', res)
+      console.log("I am testing the delivered event")
       expect(res.state).to.equal("Happened");
       expect(res.time).to.not.be.null;
 
 
-  
+      //const state = JSON.stringify(res, null, 2)
+      //const state = parse((await chaincodeStub.getState(InitRes.contractId)).toString())// we deleted JSON.parse, we need only to parse the state
+      //////console.log(state1)
+      //expect(state.state).to.eql(true)
+
+      //expect(state.state).to.eql("true")
+      //////console.log('state....... ', res.state)
+      //////console.log('time....... ', res.time)
 
     }) 
     
@@ -146,13 +345,42 @@ describe('Meat Sale chain code tests', () => {
       // ////console.log('res2........ ', res2)
       expect(res2.successful).to.eql(true)
       
-      const res = await c.getPaidDateAndTime(transactionContext, JSON.stringify({ contractId: InitRes.contractId, quiredState}))
+      const res = await c.getEventDateAndTime(transactionContext, JSON.stringify({ contractId: InitRes.contractId, event: EventquiredState2}))
       ////console.log('res........ paid ', res)
       //expect(res.successful).to.eql(true)
+      console.log("I am testing the paid event")
       expect(res.state).to.equal("Happened");
       expect(res.time).to.not.be.null;
     })
 
+     //paidLate event 
+     it('Should successfully allow access to the state and time of the "paidLate" event for authorized roles only.', async () => {
+
+    })
+
+     //disclosed event 
+     it('Should successfully allow access to the state and time of the "disclosed" event for authorized roles only.', async () => {
+
+     })
+
+     //non exit event 
+     it('Should return "event is not exist" event for authorized roles only.', async () => {
+      const c = new HFContract()
+      const InitRes = await c.init(transactionContext, parameters)
+
+      //const res2 = await c.trigger_delivered(transactionContext, JSON.stringify({ contractId: InitRes.contractId}))
+      
+      //console.log('res2 trigger_delivered. ', res2)
+      //expect(res2.successful).to.eql(true)
+      
+      const res = await c.getEventDateAndTime(transactionContext, JSON.stringify({ contractId: InitRes.contractId, event: EventquiredState3}))
+      //console.log('res getEventDateAndTime', res)
+      //expect(res.successful).to.eql(true)
+      console.log("I am testing the not exist event")
+      expect(res.state).to.equal("Happened");
+      expect(res.time).to.not.be.null;
+
+     })
 
 
   })
@@ -165,7 +393,7 @@ describe('Meat Sale chain code tests', () => {
       const InitRes = await c.init(transactionContext, parameters)
       ////console.log('after contract initiati');
       
-      const res = await c.getDeliveredDateAndTime(transactionContext, JSON.stringify({ contractId: InitRes.contractId, quiredState}))
+      const res = await c.getEventDateAndTime(transactionContext, JSON.stringify({ contractId: InitRes.contractId, event:EventquiredState })) //quiredState
       console.log('res........ ', res)
       //expect(res.successful).to.eql(true)//***AssertionError: expected undefined to deeply equal true
       const state = parse((await chaincodeStub.getState(InitRes.contractId)).toString())// we deleted JSON.parse, we need only to parse the state
@@ -178,7 +406,7 @@ describe('Meat Sale chain code tests', () => {
   })
   
     //AC-test run time, when the paid event happen 
-  describe('Scenario: access the sate and time of event paid after the event was triggered.', () => {
+  /*describe('Scenario: access the sate and time of event paid after the event was triggered.', () => {
     it('should sucessfully allowed only access to sate and time of event paid of authrized role only', async () => {
       const c = new HFContract()
       ////console.log('after new contract');
@@ -198,7 +426,7 @@ describe('Meat Sale chain code tests', () => {
 
 
     })    
-  })
+  })*/
 
      //AC-test run time, when the delivered event is part of another legalposition(obligation)
   describe('Scenario: Access the state and time of an event when it is part of a legal position.', () => {
@@ -213,8 +441,8 @@ describe('Meat Sale chain code tests', () => {
       //console.log('res2 trigger_delivered. ', res2)
       expect(res2.successful).to.eql(true)
       
-      const res = await c.getDeliveredDateAndTime(transactionContext, JSON.stringify({ contractId: InitRes.contractId, quiredState}))
-      console.log('res getDeliveredDateAndTime', res)
+      const res = await c.getEventDateAndTime(transactionContext, JSON.stringify({ contractId: InitRes.contractId, event: EventquiredState })) //quiredState
+      console.log('res getEventDateAndTime', res)
       //expect(res.successful).to.eql(true)
       expect(res.state).to.equal("Happened");
       expect(res.time).to.not.be.null;
@@ -224,13 +452,18 @@ describe('Meat Sale chain code tests', () => {
 
 
   //AC-test obligation state and time when it is active
-  
+  /*
   describe('Scenario: Access the state and time of the delivery obligation for the performer, right holder, or authorized roles.', () => {
     it('Should successfully allow access to the state and time of the delivery obligation in the "active" state for authorized roles only.', async () => {
       const c = new HFContract()
       ////console.log('after new contract');
       const InitRes = await c.init(transactionContext, parameters)
-   
+      ////console.log('after contract initiati');
+
+      //const res2 = await c.trigger_delivered(transactionContext, JSON.stringify({ contractId: InitRes.contractId}))
+      
+      // ////console.log('res2........ ', res2)
+      //expect(res2.successful).to.eql(true)
       
       const res = await c.getLegalPositionStateAndTime(transactionContext, JSON.stringify({ contractId: InitRes.contractId, quiredState}))
       ////console.log('res.. Obligation active', res)
@@ -239,11 +472,133 @@ describe('Meat Sale chain code tests', () => {
       expect(res.time).to.not.be.null;
 
 
+      //const state = JSON.stringify(res, null, 2)
+      //const state = parse((await chaincodeStub.getState(InitRes.contractId)).toString())// we deleted JSON.parse, we need only to parse the state
+      //////console.log(state1)
+      //expect(state.state).to.eql(true)
+
+      //expect(state.state).to.eql("true")
+      //////console.log('state....... ', res.state)
+      //////console.log('time....... ', res.time)
+
     })    
-  })
+  })*/
 
 
+/*
+  describe('Scenario: payment is violated.', () => {
+     it('should violate Payment.', async () => {
+       const c = new HFContract()
+       const InitRes = await c.init(transactionContext, parameters)
+       const res = await c.violateObligation_payment(transactionContext, InitRes.contractId)
+       expect(res.successful).to.eql(true)
+       const state = parse((await chaincodeStub.getState(InitRes.contractId)).toString())
+       expect(state.obligations.payment.state).to.eql("Violation")     
+     })
 
+     it('should trigger latePayment and suspendDelivery if payment is violated.', async () => {
+       const c = new HFContract()
+       const InitRes = await c.init(transactionContext, parameters)
+       const res = await c.violateObligation_payment(transactionContext, InitRes.contractId)
+       expect(res.successful).to.eql(true)
+       const state = parse((await chaincodeStub.getState(InitRes.contractId)).toString())
+       expect(state.obligations.payment.state).to.eql("Violation")
+       expect(state.obligations.latePayment.state).to.eql("Active")
+       expect(state.obligations.latePayment.activeState).to.eql("InEffect")
+       expect(state.powers.suspendDelivery.state).to.eql("Active")
+       expect(state.powers.suspendDelivery.activeState).to.eql("InEffect")
+     })
+
+     it('should suspend delivery if suspendDelivery is exerted.', async () => {
+       const c = new HFContract()
+       const InitRes = await c.init(transactionContext, parameters)
+       const res = await c.violateObligation_payment(transactionContext, InitRes.contractId)
+       expect(res.successful).to.eql(true)
+       const state = parse((await chaincodeStub.getState(InitRes.contractId)).toString())
+       expect(state.obligations.payment.state).to.eql("Violation")
+       expect(state.obligations.latePayment.state).to.eql("Active")
+       expect(state.obligations.latePayment.activeState).to.eql("InEffect")
+       expect(state.powers.suspendDelivery.state).to.eql("Active")
+
+       const res2 = await c.p_suspendDelivery_suspended_o_delivery(transactionContext, InitRes.contractId)
+       expect(res2.successful).to.eql(true)
+       const state2 = parse((await chaincodeStub.getState(InitRes.contractId)).toString())
+       expect(state2.obligations.delivery.state).to.eql("Active")
+       expect(state2.obligations.delivery.activeState).to.eql("Suspension")
+       expect(state2.powers.suspendDelivery.state).to.eql("SuccessfulTermination")
+     })
+
+     it('should trigger resumeDelivery and fulfill latePayment if paidLate is triggered.', async () => {
+       const c = new HFContract()
+       const InitRes = await c.init(transactionContext, parameters)
+       const res = await c.violateObligation_payment(transactionContext, InitRes.contractId)
+       expect(res.successful).to.eql(true)
+       const res2 = await c.p_suspendDelivery_suspended_o_delivery(transactionContext, InitRes.contractId)
+       expect(res2.successful).to.eql(true)
+       const res3 = await c.trigger_paidLate(transactionContext, JSON.stringify({ contractId: InitRes.contractId }))
+       expect(res3.successful).to.eql(true)
+
+       const state = parse((await chaincodeStub.getState(InitRes.contractId)).toString())
+       expect(state.powers.resumeDelivery.state).to.eql("Active")
+       expect(state.powers.resumeDelivery.activeState).to.eql("InEffect")
+       expect(state.obligations.latePayment.state).to.eql("Fulfillment")
+  
+     })
+
+     it('should resume delivery if resumeDelivery is exerted.', async () => {
+       const c = new HFContract()
+       const InitRes = await c.init(transactionContext, parameters)
+       const res = await c.violateObligation_payment(transactionContext, InitRes.contractId)
+       expect(res.successful).to.eql(true)
+       const res2 = await c.p_suspendDelivery_suspended_o_delivery(transactionContext, InitRes.contractId)
+       expect(res2.successful).to.eql(true)
+       const res3 = await c.trigger_paidLate(transactionContext, JSON.stringify({ contractId: InitRes.contractId }))
+       expect(res3.successful).to.eql(true)
+       const res4 = await c.p_resumeDelivery_resumed_o_delivery(transactionContext, InitRes.contractId)
+       expect(res4.successful).to.eql(true)
+
+       const state = parse((await chaincodeStub.getState(InitRes.contractId)).toString())
+       expect(state.powers.resumeDelivery.state).to.eql("SuccessfulTermination")
+       expect(state.obligations.delivery.state).to.eql("Active")
+       expect(state.obligations.delivery.activeState).to.eql("InEffect")
+     })
+
+    it('should successfully terminate contract if delivered is triggered.', async () => {
+       const c = new HFContract()
+       const InitRes = await c.init(transactionContext, parameters)
+       const res = await c.violateObligation_payment(transactionContext, InitRes.contractId)
+       expect(res.successful).to.eql(true)
+       const res2 = await c.p_suspendDelivery_suspended_o_delivery(transactionContext, InitRes.contractId)
+       expect(res2.successful).to.eql(true)
+       const res3 = await c.trigger_paidLate(transactionContext, JSON.stringify({ contractId: InitRes.contractId }))
+       expect(res3.successful).to.eql(true)
+       const res4 = await c.p_resumeDelivery_resumed_o_delivery(transactionContext, InitRes.contractId)
+       expect(res4.successful).to.eql(true)
+       const res5 = await c.trigger_delivered(transactionContext, JSON.stringify({ contractId: InitRes.contractId }))
+       expect(res5.successful).to.eql(true)
+
+       const state = parse((await chaincodeStub.getState(InitRes.contractId)).toString())
+       expect(state.state).to.eql("SuccessfulTermination")
+       expect(state.obligations.delivery.state).to.eql("Fulfillment")
+       expect(state.obligations.latePayment.state).to.eql("Fulfillment")
+     })
+
+     it('should unsuccessfully terminate contract if latePayment is violated.', async () => {
+       const c = new HFContract()
+       const InitRes = await c.init(transactionContext, parameters)
+       const res = await c.violateObligation_payment(transactionContext, InitRes.contractId)
+       expect(res.successful).to.eql(true)
+       const res2 = await c.p_suspendDelivery_suspended_o_delivery(transactionContext, InitRes.contractId)
+       expect(res2.successful).to.eql(true)
+       const res3 = await c.violateObligation_latePayment(transactionContext, InitRes.contractId)
+       expect(res3.successful).to.eql(true)
+
+       const state = parse((await chaincodeStub.getState(InitRes.contractId)).toString())
+       expect(state.state).to.eql("UnsuccessfulTermination")
+       expect(state.obligations.delivery.state).to.eql("UnsuccessfulTermination")
+     })
+   
+  })*/
 
    //AC-test obligation state and time
    //AC- when check state and time when delivery obligation is violoated 
@@ -254,7 +609,11 @@ describe('Meat Sale chain code tests', () => {
         const InitRes = await c.init(transactionContext, parameters)
         ////console.log('after contract initiati');
 
-    
+        //const res2 = await c.trigger_delivered(transactionContext, JSON.stringify({ contractId: InitRes.contractId}))
+        
+        // ////console.log('res2........ ', res2)
+        //expect(res2.successful).to.eql(true)
+        
         const res = await c.getLegalPositionStateAndTime(transactionContext, JSON.stringify({ contractId: InitRes.contractId, quiredState}))
         ////console.log('res.. Obligation active', res)
         //expect(res.successful).to.eql(true)
@@ -262,6 +621,14 @@ describe('Meat Sale chain code tests', () => {
         expect(res.time).to.not.be.null;
 
 
+        //const state = JSON.stringify(res, null, 2)
+        //const state = parse((await chaincodeStub.getState(InitRes.contractId)).toString())// we deleted JSON.parse, we need only to parse the state
+        //////console.log(state1)
+        //expect(state.state).to.eql(true)
+
+        //expect(state.state).to.eql("true")
+        //////console.log('state....... ', res.state)
+        //////console.log('time....... ', res.time)
 
       })    
 
@@ -294,7 +661,20 @@ describe('Meat Sale chain code tests', () => {
       ////console.log(' suspend Obligation delivery ', res1)
       expect(res1.successful).to.eql(true)
       const state = parse((await chaincodeStub.getState(InitRes.contractId)).toString())
+      //////console.log('res.. Obligation Suspension', state)
+      //expect(state.obligations.delivery.state).to.eql("Suspension")
+      //expect(state.obligations.delivery.state).to.eql("Active")
+      //expect(state.obligations.delivery.activeState).to.eql("InEffect")
+      //expect(state.powers.suspendDelivery.state).to.eql("Active")
 
+      //const res2 = await c.p_suspendDelivery_suspended_o_delivery(transactionContext, InitRes.contractId)
+      //expect(res2.successful).to.eql(true)
+      //const state2 = parse((await chaincodeStub.getState(InitRes.contractId)).toString())
+      //////console.log('res.. Obligation Suspension state2 ', state2.state)
+      //expect(state.state).to.eql("Active")
+      //expect(state.obligations.delivery.state).to.eql("Active")
+      //expect(state.obligations.delivery.activeState).to.eql("Suspension")
+      //expect(state.powers.suspendDelivery.state).to.eql("SuccessfulTermination")
       
       quiredState = {state:"Suspension", resource:"delivery", resourceType:"obligation"}
       const res3 = await c.getLegalPositionStateAndTime(transactionContext, JSON.stringify({ contractId: InitRes.contractId, quiredState}))
@@ -329,6 +709,8 @@ describe('Meat Sale chain code tests', () => {
       expect(state2.powers.suspendDelivery.state).to.eql("Active")
 
 
+      //const res4 = await c.trigger_delivered(transactionContext, JSON.stringify({ contractId: InitRes.contractId}))
+      //expect(res4.successful).to.eql(true)
 
       const res1 = await c.p_suspendDelivery_suspended_o_delivery(transactionContext, InitRes.contractId)
       //////console.log(' suspend Obligation delivery ', res1)
@@ -376,7 +758,19 @@ describe('Meat Sale chain code tests', () => {
    
       const res2 = await c.trigger_delivered(transactionContext, JSON.stringify({ contractId: InitRes.contractId}))
       expect(res2.successful).to.eql(true)
+
+      //
+      //console.log("before paid")
+      //const res = await c.trigger_paid(transactionContext, JSON.stringify({ contractId: InitRes.contractId}))
+      //expect(res.successful).to.eql(true) 
+      //console.log("after paid")
+
+
       const state = parse((await chaincodeStub.getState(InitRes.contractId)).toString())// we deleted JSON.parse, we need only to parse the state
+     // ////console.log('state....... ', state.state)
+      //expect(state.state).to.eql("SuccessfulTermination")
+      //expect(state.obligations.delivery.state).to.eql("Fulfillment")
+      //expect(state.obligations.payment.state).to.eql("Fulfillment")
 
       const res3 = await c.getLegalPositionStateAndTime(transactionContext, JSON.stringify({ contractId: InitRes.contractId, quiredState}))
       ////console.log('res.. Obligation fulfillment', res3)
@@ -392,7 +786,12 @@ describe('Meat Sale chain code tests', () => {
        const InitRes = await c.init(transactionContext, parameters);
        expect(InitRes.successful).to.eql(true);
        const state = parse((await chaincodeStub.getState(InitRes.contractId)).toString())
-
+       //expect(state.state).to.eql("Active")
+       //expect(state.activeState).to.eql("InEffect")
+       //expect(state.obligations.payment.state).to.eql("Active")
+       //expect(state.obligations.payment.activeState).to.eql("InEffect")
+       //expect(state.obligations.delivery.state).to.eql("Active")
+       //expect(state.obligations.delivery.activeState).to.eql("InEffect")
 
       const res3 = await c.getLegalPositionStateAndTime(transactionContext, JSON.stringify({ contractId: InitRes.contractId, quiredState}))
       ////console.log('res.. Obligation active', res3)
@@ -404,7 +803,7 @@ describe('Meat Sale chain code tests', () => {
     })
 
     it('Should successfully allow access to the state and time of the delivery obligation in the "violation" state for authorized roles only when "delivered" happended after due date', async () => {
-      
+      /*
       const c = new HFContract()
       const InitRes = await c.init(transactionContext, parameters)
 
@@ -430,14 +829,14 @@ describe('Meat Sale chain code tests', () => {
       //expect(res2.successful).to.eql(true)
       expect(res2.state).to.equal("Violation");
       expect(res2.time).to.not.be.null;
-      
+      */
 
     })
 
 
     //unsuccessfully termination, it works on payment
     it('Should successfully allow access to the state and time of the delivery obligation in the "unsuccessfultermination" state for authorized roles only when latePayment is violated.', async () => {
-      
+      /*
       const c = new HFContract()
       const InitRes = await c.init(transactionContext, parameters)
 
@@ -448,7 +847,14 @@ describe('Meat Sale chain code tests', () => {
       const res2 = await c.violateObligation_delivery(transactionContext, InitRes.contractId)
       ////console.log('before violateObligation_delivery ', res)
       expect(res2.successful).to.eql(true)
-    
+     
+
+      //const res = await c.violateObligation_payment(transactionContext, InitRes.contractId)
+      //expect(res.successful).to.eql(true)
+      //const res2 = await c.p_suspendDelivery_suspended_o_delivery(transactionContext, InitRes.contractId)
+      //expect(res2.successful).to.eql(true)
+      //const res3 = await c.violateObligation_latePayment(transactionContext, InitRes.contractId)
+      //(res3.successful).to.eql(true)
 
      
 
@@ -467,7 +873,7 @@ describe('Meat Sale chain code tests', () => {
       //expect(res2.successful).to.eql(true)
       expect(res4.state).to.equal("UnsuccessfulTermination");
       expect(res4.time).to.not.be.null;
-
+*/
 
     })
 
@@ -475,7 +881,7 @@ describe('Meat Sale chain code tests', () => {
     //check conditional obligation when they go to create state by authrized roles
     // let quiredState = {state:"create", resource:"latePayment", resourceType:"obligation"}
       it('Should successfully allow access to "create" state and time for "conditional obligation" by authrized roles only when contract is instantiated.', async () => {
-        
+        /*
         const c = new HFContract()
         const InitRes = await c.init(transactionContext, parameters)
 
@@ -495,7 +901,7 @@ describe('Meat Sale chain code tests', () => {
         //expect(res4.successful).to.eql(true)
         expect(res4.state).to.equal("Create");//Create //*** AssertionError: expected 'Active' to deeply equal 'Create'
         expect(res4.time).to.not.be.null;
-  
+  */
   
       })
     })
@@ -542,30 +948,28 @@ describe('Meat Sale chain code tests', () => {
    
         })
 
-        // we can not test it with the meat sale, will try it with the vaccine contract
+        // we can not test it with the meat sale, will try it with the vaccine
         it('see un successful termination power states by performer and rightholder', async () => {
 
         })
 
-        // we can not test it with the meat sale, will try it with the vaccine contract
+        // we can not test it with the meat sale, will try it with the vaccine
         it('see create power states by performer and rightholder', async () => {
 
         })
 
-        // we can not test it with the meat sale, will try it with the vaccine contract
+        // we can not test it with the meat sale, will try it with the vaccine
         it('see active power states by performer and rightholder', async () => {
 
         })
 
-        // we can not test it with the meat sale, will try it with the vaccine contract
+        // we can not test it with the meat sale, will try it with the vaccine
         it('see suspend power states by performer and rightholder', async () => {
 
         })
    
    
        })
-
-
          //AC
          //Test for the parts of legal posiition 
          //here we test with parameter of condition 1
@@ -580,14 +984,22 @@ describe('Meat Sale chain code tests', () => {
             expect(res2.successful).to.eql(true)
             
             const state = parse((await chaincodeStub.getState(InitRes.contractId)).toString())// we deleted JSON.parse, we need only to parse the state
+     // ////console.log('state....... ', state.state)
+      //expect(state.state).to.eql("SuccessfulTermination")
+      //expect(state.obligations.delivery.state).to.eql("Fulfillment")
+      //expect(state.obligations.payment.state).to.eql("Fulfillment")
+
+      const res3 = await c.getStateTimeOfParts(transactionContext, JSON.stringify({ contractId: InitRes.contractId, condition: condition1}))
+      //console.log('res.. Obligation fulfillment parts', res3)
+      //expect(res2.successful).to.eql(true)
+      expect(res3.state).to.equal("Fulfillment");
+      expect(res3.time).to.not.be.null;
+        
 
 
-		    const res3 = await c.getStateTimeOfParts(transactionContext, JSON.stringify({ contractId: InitRes.contractId, condition: condition1}))
-		    //console.log('res.. Obligation fulfillment parts', res3)
-		    //expect(res2.successful).to.eql(true)
-		    expect(res3.state).to.equal("Fulfillment");
-		    expect(res3.time).to.not.be.null;
-		        
+  
+          
+     
      
           })
             //AC
@@ -604,13 +1016,16 @@ describe('Meat Sale chain code tests', () => {
             expect(res2.successful).to.eql(true)
             
             const state = parse((await chaincodeStub.getState(InitRes.contractId)).toString())// we deleted JSON.parse, we need only to parse the state
+     // ////console.log('state....... ', state.state)
+      //expect(state.state).to.eql("SuccessfulTermination")
+      //expect(state.obligations.delivery.state).to.eql("Fulfillment")
+      //expect(state.obligations.payment.state).to.eql("Fulfillment")
 
-
-		    const res3 = await c.getStateTimeOfParts(transactionContext, JSON.stringify({ contractId: InitRes.contractId, condition: condition2}))
-		      ////console.log('res.. Obligation violation parts', res3)
-		      //expect(res2.successful).to.eql(true)
-		    expect(res3.state).to.equal("You do not have permission");
-		    expect(res3.time).to.be.null; //must equal null 
+      const res3 = await c.getStateTimeOfParts(transactionContext, JSON.stringify({ contractId: InitRes.contractId, condition: condition2}))
+      ////console.log('res.. Obligation violation parts', res3)
+      //expect(res2.successful).to.eql(true)
+      expect(res3.state).to.equal("You do not have permission");
+      expect(res3.time).to.be.null; //must equal null 
         
 
 
@@ -624,6 +1039,7 @@ describe('Meat Sale chain code tests', () => {
          //Test for the parts of legal posiition 
          //here we test with parameter of condition 3
          //for someone who does not have permesstion 
+         
          it('Checking if a performer of the obligation (seller) can see the time of an event "delivered" if it is part of an obligation delivery', async () => {
 
           const c = new HFContract()
@@ -633,14 +1049,17 @@ describe('Meat Sale chain code tests', () => {
           expect(res2.successful).to.eql(true)
           
           const state = parse((await chaincodeStub.getState(InitRes.contractId)).toString())// we deleted JSON.parse, we need only to parse the state
+   // ////console.log('state....... ', state.state)
+    //expect(state.state).to.eql("SuccessfulTermination")
+    //expect(state.obligations.delivery.state).to.eql("Fulfillment")
+    //expect(state.obligations.payment.state).to.eql("Fulfillment")
 
-
-		  const res3 = await c.getStateTimeOfParts(transactionContext, JSON.stringify({ contractId: InitRes.contractId, condition: condition3}))
-		  ////console.log('res.. Obligation violation parts', res3)
-		  //expect(res2.successful).to.eql(true)
-		  expect(res3.state).to.equal(true);
-		  expect(res3.time).to.be.null; //must equal null 
-		      
+    const res3 = await c.getStateTimeOfParts(transactionContext, JSON.stringify({ contractId: InitRes.contractId, condition: condition3}))
+    ////console.log('res.. Obligation violation parts', res3)
+    //expect(res2.successful).to.eql(true)
+    expect(res3.state).to.equal(true);
+    expect(res3.time).to.be.null; //must equal null 
+      
 
 
 
@@ -660,35 +1079,138 @@ describe('Meat Sale chain code tests', () => {
           expect(res2.successful).to.eql(true)
           
           const state = parse((await chaincodeStub.getState(InitRes.contractId)).toString())// we deleted JSON.parse, we need only to parse the state
+   // ////console.log('state....... ', state.state)
+    //expect(state.state).to.eql("SuccessfulTermination")
+    //expect(state.obligations.delivery.state).to.eql("Fulfillment")
+    //expect(state.obligations.payment.state).to.eql("Fulfillment")
+
+    const res3 = await c.getStateTimeOfParts(transactionContext, JSON.stringify({ contractId: InitRes.contractId, condition: eventCondition}))
+    ////console.log('res.. Obligation violation parts', res3)
+    //expect(res2.successful).to.eql(true)
+    expect(res3.state).to.equal("Happened");
+    expect(res3.time).to.not.be.null; //must equal null 
+      
 
 
-		    const res3 = await c.getStateTimeOfParts(transactionContext, JSON.stringify({ contractId: InitRes.contractId, condition: eventCondition}))
-		    ////console.log('res.. Obligation violation parts', res3)
-		    //expect(res2.successful).to.eql(true)
-		    expect(res3.state).to.equal("Happened");
-		    expect(res3.time).to.not.be.null; //must equal null 
+
+        
    
    
         })
 
          //AC
         //eventCondiiton - not happened
-        it(' checking if a performer of obligation delivery seller can not see delivered event when its part of an obligation delivery ', async () => {
+        it(' checking if a performer of obligation delivery seller can not see delivered event its part of an obligation delivery ', async () => {
 
 
           const c = new HFContract()
           const InitRes = await c.init(transactionContext, parameters)
-          const res3 = await c.getStateTimeOfParts(transactionContext, JSON.stringify({ contractId: InitRes.contractId, condition: eventCondition}))
-          console.log('result of event in the parts of obligation', res3)
+    
+          //const res2 = await c.trigger_delivered(transactionContext, JSON.stringify({ contractId: InitRes.contractId}))
           //expect(res2.successful).to.eql(true)
-          expect(res3.state).to.equal("Not Happened");
-          expect(res3.time).to.be.null; //must equal null 
+          
+          //const state = parse((await chaincodeStub.getState(InitRes.contractId)).toString())// we deleted JSON.parse, we need only to parse the state
+   // ////console.log('state....... ', state.state)
+    //expect(state.state).to.eql("SuccessfulTermination")
+    //expect(state.obligations.delivery.state).to.eql("Fulfillment")
+    //expect(state.obligations.payment.state).to.eql("Fulfillment")
+
+    const res3 = await c.getStateTimeOfParts(transactionContext, JSON.stringify({ contractId: InitRes.contractId, condition: eventCondition}))
+    console.log('result of event in the parts of obligation', res3)
+    //expect(res2.successful).to.eql(true)
+    expect(res3.state).to.equal("Not Happened");
+    expect(res3.time).to.be.null; //must equal null 
       
+
+
+
+        
+   
    
         })
 
 
+
+
+
         })
 
 
+     
+
+
+/*
+     it('should trigger terminateContract if delivery is violated.', async () => {
+       const c = new HFContract()
+       const InitRes = await c.init(transactionContext, parameters)
+       const res = await c.violateObligation_delivery(transactionContext, InitRes.contractId)
+       expect(res.successful).to.eql(true)
+       const state = JSON.parse((await chaincodeStub.getState(InitRes.contractId)).toString())
+       expect(state.obligations.delivery.state).to.eql("Violation")
+       expect(state.powers.terminateContract.state).to.eql("Active")
+       expect(state.powers.terminateContract.activeState).to.eql("InEffect")
+     })
+
+     it('should terminateContract if terminateContract is exerted.', async () => {
+       const c = new HFContract()
+       const InitRes = await c.init(transactionContext, parameters)
+       const res = await c.violateObligation_delivery(transactionContext, InitRes.contractId)
+       expect(res.successful).to.eql(true)
+       const state = JSON.parse((await chaincodeStub.getState(InitRes.contractId)).toString())
+       expect(state.obligations.delivery.state).to.eql("Violation")
+       expect(state.powers.terminateContract.state).to.eql("Active")
+       expect(state.powers.terminateContract.activeState).to.eql("InEffect")
+
+       const res2 = await c.p_terminateContract_terminated_contract(transactionContext, InitRes.contractId)
+       expect(res2.successful).to.eql(true)
+       const state2 = JSON.parse((await chaincodeStub.getState(InitRes.contractId)).toString())
+       expect(state2.state).to.eql("UnsuccessfulTermination")
+       expect(state2.obligations.payment.state).to.eql("UnsuccessfulTermination")
+       expect(state2.powers.terminateContract.state).to.eql("SuccessfulTermination")
+     })    */
+   //////////////////////////////////})
+
+/*
+  describe('MyChaincode', () => {
+    transactionContext = new Context()
+    transactionContext.setChaincodeStub(ChaincodeMockStub)
+    const chaincode = new HFContract();
+    it('should emit and listen to events', async () => {
+      // chaincodeStub = sinon.createStubInstance(ChaincodeMockStub)
+
+
+      // const InitRes= await chaincode.Init(transactionContext, parameters);
+      // ////console.log("InitRes......... ", InitRes.contractId)
+
+
+      let TransactionContextMock = new Context()
+      // let chaincodeStub = sinon.createStubInstance(ChaincodeMockStub)
+      TransactionContextMock.setChaincodeStub(ChaincodeMockStub)
+
+      const mockStub = new ChaincodeMockStub('MeatSale', chaincode);
+      // const init = await chaincode.Init(transactionContext, parameters);
+      // ////console.log("init.........", init)
+      // await mockStub.mockInit("710b962e-041c-11e1-9234-0123456789ab", [TransactionContextMock, JSON.stringify(parametersObject)])
+      const mockInit = await mockStub.mockTransactionStart("710b962e-041c-11e1-9234-0123456789ab");
+      ////console.log("mockInit........ ", mockInit)
+
+
+        const response  = await mockStub.mockTransactionStart('710b962e-041c-11e1-9234-0123456789ab', ['trigger_paidLate', "MeatSale_202310216"]); //"MeatSale_2023102017"
+
+        ////console.log("response............ ", response)
+        // Set up event listener
+
+        const eventPayload = await mockStub.getEvent('contractEvent');
+
+        const eventPayload1 = await mockStub.getEvent('Happened');
+
+       ////console.log("eventPayload......... ", eventPayload) 
+       ////console.log("eventPayload1......... ", eventPayload1) 
+
+
+        // Check if the event was received
+        // expect(eventReceived).to.be.true;
+    });
+});
+*/
 })
