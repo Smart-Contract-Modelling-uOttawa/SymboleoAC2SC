@@ -1,12 +1,15 @@
-const { Role } = require("symboleo-js-core");
+const { Role } = require("symboleoac-js-core");
+const { Attribute } = require("symboleoac-js-core");
 
 class Shipper extends Role {
-  constructor(_name,name,job) {
+  constructor(_name,name,org, dept) {
     super()
     this._name = _name
-    this.name = name
-    this.job = job
     this._type = "Shipper"
+    this.name = new Attribute("name",name)
+     /** */
+    this.org = new Attribute("org",org)
+    this.dept = new Attribute("dept",dept)
   }
 }
 

@@ -1,12 +1,15 @@
-const { Role } = require("symboleo-js-core");
+const { Role } = require("symboleoac-js-core");
+const { Attribute } = require("symboleoac-js-core");
 
 class Regulator extends Role {
-  constructor(_name,returnAddress, name) {
+  constructor(_name,name,org,dept) {
     super()
     this._name = _name
-    this.returnAddress = returnAddress
-    this.name = name
     this._type = "Regulator"
+    this.name = new Attribute("name",name)
+       /** */
+    this.org = new Attribute("org",org)
+    this.dept = new Attribute("dept",dept)
   }
 }
 

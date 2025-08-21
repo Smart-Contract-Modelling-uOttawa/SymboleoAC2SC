@@ -1,12 +1,11 @@
 const { Role } = require("symboleoac-js-core");
 const { Attribute } = require("symboleoac-js-core");
 
-class Seller extends Role {
-  constructor(_name,returnAddress, name, org, dept) {
+class Admin extends Role {
+  constructor(_name,name, org, dept) {
     super()
     this._name = _name
-    this._type = "Seller"
-    this.returnAddress = new Attribute("returnAddress",returnAddress)
+    this._type = "Admin"
     this.name = new Attribute("name",name)
     //** */
     this.org = new Attribute("org",org)
@@ -14,4 +13,4 @@ class Seller extends Role {
   }
 }
 
-module.exports.Seller = Seller
+module.exports.Admin = Admin
